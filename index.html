@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Routine Millionaire</title>
+<meta name="theme-color" content="#0b0f2a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Millionaire">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+@font-face{font-family:"Cinzel";font-weight:600;font-display:swap;src:url(cinzel-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Cinzel";font-weight:800;font-display:swap;src:url(cinzel-latin-800-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(figtree-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:500;font-display:swap;src:url(figtree-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(figtree-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:700;font-display:swap;src:url(figtree-latin-700-normal.woff2) format("woff2")}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* Layout: a single game-show stage column; the prize ladder climbs beside the step card, money set in engraved capitals */
+:root{
+  --stage:#0b0f2a; --panel:#141a40; --panel-2:#1c2352; --line:#2c3570;
+  --ink:#eef0ff; --muted:#a3a9d6; --gold:#f2c14e; --gold-deep:#b8892a;
+  --go:#3fbf6e; --part:#f08a2c; --stop:#e0464a;
+  --display:"Cinzel", "Copperplate", "Trajan Pro", Georgia, serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(120% 70% at 50% 0%, #1a2160 0%, var(--stage) 60%) fixed, var(--stage);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:12px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{margin:0;text-wrap:balance}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 12px;padding-top:6px}
+header.top .brand{flex:1 1 100%}
+.brand{font-family:var(--display);font-weight:800;font-size:1.25rem;letter-spacing:.04em;color:var(--gold)}
+.brand small{display:block;font-family:var(--body);font-weight:500;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+nav.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+nav.tabs button{padding:8px 14px;border-radius:999px;font-weight:600;font-size:.9rem;color:var(--muted)}
+nav.tabs button[aria-current="true"]{background:var(--panel-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--gold-deep)}
+
+.label{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.muted{color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:12px;font-weight:700;background:var(--panel-2);border:1px solid var(--line)}
+.btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#1b1405;border:0}
+.btn.ghost{background:transparent}
+.btn.small{padding:8px 12px;font-size:.88rem;border-radius:10px}
+.btn.danger{color:#ffb3b5;border-color:#5a2a40}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* routines list */
+.routines{display:flex;flex-direction:column;gap:12px}
+.routine{display:flex;flex-direction:column;gap:12px}
+.routine h3{font-size:1.15rem}
+.routine .meta{font-size:.9rem;color:var(--muted)}
+.tag{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--gold);border:1px solid var(--gold-deep);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.empty{text-align:center;padding:28px 18px}
+
+/* editor */
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field textarea{background:var(--stage);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.field textarea{resize:vertical;min-height:58px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step-edit{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.step-edit .spread .label{color:var(--gold)}
+.step-edit.final .label{color:var(--gold)}
+.iconbtn{width:36px;height:36px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.iconbtn:disabled{opacity:.35;cursor:default}
+.confirm{background:#2a1530;border:1px solid #5a2a40;border-radius:12px;padding:12px}
+
+/* play */
+.stage-head{display:flex;flex-direction:column;gap:4px;text-align:center}
+.stage-head h2{font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:.03em}
+.question{position:relative;text-align:center;display:flex;flex-direction:column;gap:12px;padding:22px 18px;
+  background:linear-gradient(180deg,#18205a,#10153a);border:1px solid var(--gold-deep);border-radius:22px;box-shadow:0 0 0 4px rgba(242,193,78,.08),0 18px 40px rgba(0,0,0,.35)}
+.forprize{font-family:var(--display);font-weight:800;color:var(--gold);font-size:1.05rem;letter-spacing:.06em}
+.question h3{font-size:1.6rem;line-height:1.2}
+.purpose{color:var(--muted);max-width:42ch;margin:0 auto}
+.dose{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.dose span{background:var(--stage);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;font-variant-numeric:tabular-nums}
+.answers{display:flex;flex-direction:column;gap:10px}
+.answer{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:1.02rem}
+.answer .key{flex:none;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;color:#0b0f2a}
+.answer small{display:block;font-weight:500;color:var(--muted);font-size:.85rem}
+.answer.g .key{background:var(--go)} .answer.o .key{background:var(--part)} .answer.r .key{background:var(--stop)}
+.answer.g{border-color:#25603d} .answer.o{border-color:#6b4220} .answer.r{border-color:#62252a}
+.reveal{display:flex;flex-direction:column;gap:14px;text-align:center}
+.quip{font-size:1.15rem;font-weight:600;line-height:1.4;max-width:40ch;margin:0 auto}
+.bigmoney{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,11vw,3.6rem);color:var(--gold);letter-spacing:.02em;line-height:1;text-shadow:0 0 30px rgba(242,193,78,.35)}
+.stopmoney{font-family:var(--display);font-weight:800;font-size:2rem;color:var(--ink)}
+
+.ladder{display:flex;flex-direction:column-reverse;gap:4px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.rung{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 12px;border-radius:9px;font-variant-numeric:tabular-nums;font-size:.92rem}
+.rung .n{color:var(--muted);width:2.2em}
+.rung .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.rung .amt{font-family:var(--display);font-weight:600;color:var(--muted)}
+.rung.final .amt{color:var(--gold)}
+.rung.now{background:linear-gradient(90deg,var(--gold),var(--gold-deep))}
+.rung.now .n,.rung.now .nm,.rung.now .amt{color:#1b1405;font-weight:700}
+.rung.done-g .amt{color:var(--go)} .rung.done-o .amt{color:var(--part)} .rung.done-r .amt{color:var(--stop)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
+.dot.g{background:var(--go)} .dot.o{background:var(--part)} .dot.r{background:var(--stop)} .dot.x{background:transparent;border:1.5px solid var(--line)}
+
+/* history */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{text-align:center;padding:14px 8px}
+.stat b{display:block;font-family:var(--display);font-size:1.6rem;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.9rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:center;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.dots{display:flex;gap:4px;flex-wrap:wrap}
+.mil{font-family:var(--display);font-weight:800;color:var(--gold)}
+.sync{font-size:.78rem;color:var(--muted);text-align:center}
+
+/* surprise pictures */
+.surprise{display:flex;flex-direction:column;align-items:center;gap:6px}
+.surprise svg{width:150px;height:150px;max-width:100%;overflow:visible}
+.surprise .cap{font-family:var(--display);font-weight:600;font-size:.85rem;letter-spacing:.06em;color:var(--gold)}
+.soundbtn{padding:8px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:.85rem;color:var(--muted)}
+.soundbtn[aria-pressed="true"]{color:var(--ink);border-color:var(--gold-deep)}
+@media (prefers-reduced-motion:no-preference){
+  .a-bob{animation:bob .6s ease-in-out infinite alternate}
+  .a-bounce{animation:bounce .7s cubic-bezier(.3,1.6,.6,1) infinite alternate}
+  .a-spin{animation:spin 2.4s linear infinite;transform-origin:60px 60px}
+  .a-sway{animation:sway 1.4s ease-in-out infinite alternate;transform-origin:60px 115px}
+  .a-wiggle{animation:wiggle .35s ease-in-out infinite alternate;transform-origin:60px 100px}
+  .a-jump{animation:jump .55s ease-in-out infinite alternate}
+  .a-launch{animation:launch 1.6s ease-in-out infinite}
+  .a-wobble{animation:wobble .9s ease-in-out infinite;transform-origin:60px 110px}
+  .a-crawl{animation:crawl 3s ease-in-out infinite alternate}
+  .a-snooze{animation:snooze 2.2s ease-in-out infinite;transform-origin:60px 100px}
+  .a-melt{animation:melt 2s ease-in-out infinite alternate;transform-origin:60px 110px}
+  .a-rise{animation:rise2 1.6s ease-in-out infinite}
+  .a-rise.d2{animation-delay:.5s}.a-rise.d3{animation-delay:1s}
+  .a-twinkle{animation:twinkle 1s ease-in-out infinite alternate}
+  .a-twinkle.d2{animation-delay:.5s}
+  @keyframes bob{to{transform:translateY(6px) rotate(-6deg)}}
+  @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-18px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes sway{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
+  @keyframes wiggle{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+  @keyframes jump{from{transform:translateY(0) scaleY(.94)}to{transform:translateY(-14px) scaleY(1.04)}}
+  @keyframes launch{0%{transform:translateY(8px)}50%{transform:translateY(-22px)}100%{transform:translateY(8px)}}
+  @keyframes wobble{0%,100%{transform:skewX(0) scaleY(1)}25%{transform:skewX(8deg) scaleY(.95)}75%{transform:skewX(-8deg) scaleY(1.04)}}
+  @keyframes crawl{from{transform:translateX(-10px)}to{transform:translateX(10px)}}
+  @keyframes snooze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.95)}}
+  @keyframes melt{from{transform:scaleY(1)}to{transform:scaleY(.9) scaleX(1.05)}}
+  @keyframes rise2{0%{transform:translateY(6px);opacity:0}40%{opacity:1}100%{transform:translateY(-16px);opacity:0}}
+  @keyframes twinkle{from{opacity:.2;transform:scale(.7)}to{opacity:1;transform:scale(1.1)}}
+}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+@media (max-width:420px){.grid2{grid-template-columns:1fr 1fr}.question h3{font-size:1.4rem}}
+@media (prefers-reduced-motion:no-preference){.question,.reveal{animation:rise .35s ease-out}@keyframes rise{from{transform:translateY(6px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Routine Millionaire<small>Climb the ladder, one step at a time</small></div>
+    <nav class="tabs" aria-label="Sections">
+      <button id="tab-home" data-go="home" aria-current="true">Routines</button>
+      <button id="tab-hist" data-go="history" aria-current="false">History</button>
+    </nav>
+    <button class="soundbtn" id="soundbtn" aria-pressed="true">Sound on</button>
+  </header>
+  <main id="view"></main>
+  <p class="sync" id="sync">Saved on this phone · works offline</p>
+</div>
+
+<script>
+/* ---------- quip library ---------- */
+const Q = {
+  green: [
+    "A pigeon somewhere just nodded at you with deep respect.",
+    "Your muscles have filed a formal complaint. It was denied.",
+    "The audience is on its feet. The audience is three houseplants, but still.",
+    "Somewhere in Rome, a statue just felt slightly out of shape.",
+    "That step has been completed, notarized, and laminated.",
+    "Your future knees send a thank-you card. It smells faintly of lavender.",
+    "A small goat in the Alps felt that. He is proud of you.",
+    "Gravity tried its best. Gravity lost.",
+    "That was so clean a Roman nonna would let you skip the second helping.",
+    "The host is sweating. You are clearly here to win.",
+    "Phone a friend? You did not need a friend. You needed that.",
+    "Your skeleton is doing a tiny victory dance inside you right now.",
+    "The scoreboard flickered from sheer excitement.",
+    "An espresso somewhere just brewed itself in your honor.",
+    "Fifty-fifty? Please. That was a hundred-hundred.",
+    "A tomato plant just grew an extra leaf out of solidarity.",
+    "Your heart rate called. It said hello and also wow.",
+    "That step is now legally obligated to be impressed with you.",
+    "A cat watched that and briefly considered a fitness routine.",
+    "You moved like a well-pruned rosebush: strong, tidy, slightly thorny.",
+    "The ladder creaked. It knows you are coming for the top.",
+    "Final answer? Locked in. And it was correct.",
+    "Somewhere, a Fitbit you do not own just buzzed with envy.",
+    "You have been upgraded from mortal to mildly legendary.",
+    "That was so good the Colosseum is considering a reopening.",
+    "Your sweat glands have been awarded a small medal.",
+    "Ask the audience. The audience says: obviously yes.",
+    "Even the moon paused its orbit for a second to watch.",
+    "A bee just landed nearby to take notes.",
+    "The compost of doubt has been turned. Fresh growth incoming."
+  ],
+  orange: [
+    "Not every rep, but the rep spirits were present.",
+    "Partial credit is still credit. The bank is open.",
+    "You did most of it. The rest is resting in a hammock somewhere.",
+    "Some reps went on vacation. They send postcards.",
+    "A little short, but so is espresso, and look how powerful espresso is.",
+    "The judges have conferred and decided: that counts.",
+    "Orange is the color of sunsets and carrots. Both excellent.",
+    "You left a few reps on the floor. The floor says thank you.",
+    "Half a loaf is still bread. Whole grain, even.",
+    "The host raises an eyebrow, then shrugs and moves you up anyway.",
+    "Like a seedling: not full size yet, definitely alive.",
+    "Some reps were skipped. The ladder forgives. The ladder is kind.",
+    "You negotiated with the exercise and reached a fair settlement.",
+    "Not perfect, but neither is the Leaning Tower and people adore it.",
+    "The reps you did were very sincere ones.",
+    "A gentle orange glow of effort. Very cozy. Very valid.",
+    "Close enough that the pigeon still nodded, just slower.",
+    "Your muscles asked for a recess. Recess granted. Climb continues.",
+    "You are on the ladder and that is the whole point.",
+    "Some days are full sun, some are partial shade. Plants grow in both."
+  ],
+  stop: [
+    "You walk away with the money. Smart contestants know when.",
+    "The ladder will be here tomorrow. It is not going anywhere. It is a ladder.",
+    "Even the greatest gardeners stop to let the soil rest.",
+    "You played the game. The game respects you.",
+    "A pause is just a comma. The sentence continues later.",
+    "The host shakes your hand warmly. You have a lovely parting gift.",
+    "Today the step won. Tomorrow it gets a rematch.",
+    "Somewhere a sloth is applauding at its own pace.",
+    "You showed up, which is the step most people skip.",
+    "The houseplants are still proud. They are very loyal houseplants.",
+    "Retreat is a tactic. Romans did it too, then built roads.",
+    "Every red light turns green eventually. That is how lights work.",
+    "Your body sent a memo and you read it. Very professional.",
+    "The prize is banked. Go have a nice glass of water.",
+    "Not a loss. A strategic intermission with snacks.",
+    "Bulbs spend all winter underground and still come up tulips.",
+    "The pigeon has seen worse. The pigeon has seen much worse.",
+    "Tomorrow you come back with fresh legs and a grudge.",
+    "You still climbed. Look at all those rungs behind you.",
+    "Even millionaires started at the hundred dollar question."
+  ],
+  millionaire: [
+    "YOU ARE A MILLIONAIRE. Please do not try to spend it at the bakery.",
+    "One million imaginary dollars, deposited directly into your biceps.",
+    "The lights are spinning. The music is swelling. You did the whole thing.",
+    "A tiny marching band of ants just paraded past your shoes.",
+    "Rome was not built in a day, but your routine just was.",
+    "Every houseplant in the building has burst into applause.",
+    "You climbed the entire ladder. The ladder would like your autograph.",
+    "Confetti cannons fired across Europe. Mostly metaphorically.",
+    "The host is crying. The audience is crying. The pigeon is crying.",
+    "Final answer, final step, final glory. Absolutely magnificent.",
+    "A sunflower somewhere turned to face you instead of the sun.",
+    "Your future self just sent a fruit basket backward through time.",
+    "The Trevi Fountain is throwing coins at YOU today.",
+    "That is a full routine. Champion behavior. Frame this moment.",
+    "Gravity has asked for a rematch. Gravity has been told to wait.",
+    "Millionaire status unlocked. Benefits include feeling great and a slight swagger.",
+    "Somewhere a gym teacher from 1975 just got a strange warm feeling.",
+    "You did all the steps. All of them. Every single one.",
+    "The ladder has been conquered. Please collect your invisible oversized check.",
+    "Ding ding ding. One million points of pure stubbornness."
+  ]
+};
+/* ---------- cast of characters who comment on your steps ---------- */
+const VOICES=[
+  {who:"The Game Show Host",langs:["en-US"],rate:1,pitch:1,green:Q.green,orange:Q.orange,stop:Q.stop,millionaire:Q.millionaire},
+  {who:"The Drill Sergeant",langs:["en-US"],rate:1.1,pitch:.6,
+    green:["OUTSTANDING, RECRUIT. NOW WIPE THAT SMILE OFF AND GET TO THE NEXT STEP.","DID I SAY YOU COULD BE THIS GOOD? I DID NOT. KEEP IT UP.","THAT WAS ACCEPTABLE. IN MY BOOK, ACCEPTABLE IS A MEDAL.","MOVE IT, MOVE IT, MOVE IT. THAT LADDER WILL NOT CLIMB ITSELF.","I HAVE SEEN BOULDERS WITH LESS DETERMINATION. GOOD WORK.","I AM MILDLY PROUD OF YOU, RECRUIT. THAT IS VERY RARE.","WHO TRAINED YOU? I DID? EXCELLENT. CARRY ON."],
+    orange:["I COUNTED THOSE REPS, RECRUIT. I COUNTED FEWER THAN I ORDERED.","PARTIAL CREDIT IS STILL CREDIT. DO NOT MAKE IT A HABIT.","YOU BENT BUT YOU DID NOT BREAK. NEXT STEP, DOUBLE TIME.","THOSE MISSING REPS ARE NOW ON MY LIST. I KEEP A VERY LONG LIST.","NOT PERFECT. STILL STANDING. THAT IS A SOLDIER."],
+    stop:["AT EASE, RECRUIT. REGROUP AND REPORT BACK TOMORROW AT 0800.","A TACTICAL RETREAT IS STILL TACTICS. HYDRATE.","YOU FOUGHT TODAY. THE BATTLE CONTINUES TOMORROW.","DISMISSED. AND I EXPECT TO SEE YOU AGAIN, RECRUIT.","EVEN GENERALS SIT DOWN SOMETIMES. GO SIT DOWN."],
+    millionaire:["MISSION ACCOMPLISHED. I AM NOT CRYING. THAT IS SWEAT.","RECRUIT, YOU ARE HEREBY PROMOTED TO MILLIONAIRE FIRST CLASS.","FULL ROUTINE COMPLETE. I WILL BE TELLING THE OTHER RECRUITS ABOUT YOU.","THAT, RECRUIT, IS HOW IT IS DONE. HOO-RAH."]},
+  {who:"Your Romantic Admirer",langs:["fr-FR","fr-CA","en-GB"],rate:.85,pitch:1.1,
+    green:["Darling, the way you finished that step... I may need to sit down.","Every rep you do, a violin somewhere plays a little louder.","You, my love, are poetry in motion. Sweaty poetry. Beautiful.","The moonlight has nothing on the glow you have right now.","I would write you sonnets, but you are too busy being magnificent.","My heart skipped a beat. Yours probably did too. That is cardio."],
+    orange:["Not every rep, my darling, but every one was full of passion.","Imperfect, like a love letter with one tiny smudge. Still precious.","Even half your effort makes my heart flutter.","You held back a little. How mysterious. How alluring.","A few reps escaped you, my love. I never would."],
+    stop:["Rest your beautiful head, my love. Tomorrow we dance again.","Parting is such sweet sorrow. Same time tomorrow, my darling.","Even roses close at night, my dear.","I will wait for you by the ladder. Forever if I must. Or until tomorrow.","Go, my love. Drink some water. Think of me."],
+    millionaire:["A million kisses for a million dollars. Metaphorical ones, of course.","You climbed the whole ladder and also my heart. Both conquered.","My darling, you are a millionaire and a legend. I am swooning.","Fireworks, violins, roses everywhere. You did it all, my love."]},
+  {who:"The Bored Teenager",langs:["en-US"],rate:.9,pitch:1,
+    green:["ok cool. that was actually kind of good i guess.","wow. you did it. anyway.","not gonna lie that was lowkey impressive.","fine. you passed. can i go now.","slay or whatever.","that's literally so much effort. respect i guess."],
+    orange:["you kinda did it. like, kinda.","mid. but like, okay mid.","close enough i guess. whatever.","skipping reps is literally what i would do so no judgment.","half effort. relatable honestly."],
+    stop:["same. honestly same.","ok bye. see you tomorrow i guess.","valid. naps are valid.","lol you stopped. i stopped like an hour ago.","it's fine. nobody saw. except me. and i don't care."],
+    millionaire:["wait. you actually did the whole thing? ok that's actually sick.","millionaire? lend me twenty.","ok i'm posting this. no i'm not. but i thought about it.","no cap you're kind of iconic right now."]},
+  {who:"Nonna",langs:["it-IT"],rate:1,pitch:1.3,
+    green:["Brava! Now you deserve a little biscotto. Just one.","Look at you! Strong like my sauce, simmered for hours.","Madonna mia, what a performance. I tell all my friends at church.","You do this step better than my cousin Franco does anything.","Perfetto. Now drink some water, you look pale.","So strong! Who taught you this? Not me, but I take the credit."],
+    orange:["Eh, not all of them. Is okay. Even pasta breaks sometimes.","Some reps you forgot. I forget my glasses. We are family.","Is good, is good. Next time a little more, va bene.","You are tired? I make you soup after. Keep going.","Mezzo e mezzo. Half and half. Still delicious."],
+    stop:["Basta! Enough. Sit down, I bring you something to eat.","You stop? Good. Now you rest like a proper person.","Tomorrow is another day. Today, we eat.","No shame, tesoro. Even the Pope sits down.","You did enough for now. Go, I already made the coffee."],
+    millionaire:["MAMMA MIA! A millionaire! I call the whole neighborhood!","Brava, brava, BRAVISSIMA! I cry like at a wedding.","My little millionaire. I always knew. I told everybody.","Champion! Tonight I make a feast. You sit, I cook."]},
+  {who:"The Shakespearean Actor",langs:["en-GB"],rate:.85,pitch:.8,
+    green:["Hark! A step most nobly vanquished!","Thou hast conquered this exercise as a lion doth a lamb.","To rep or not to rep? Thou didst rep. Magnificently.","Fair athlete, thy muscles shine brighter than the eastern sun.","Huzzah! Let trumpets sound across the kingdom!"],
+    orange:["Thy reps were few, yet thy heart was full.","Something is amiss in the state of thy rep count. Yet onward!","A partial triumph is a triumph still, good friend.","Alas, some reps fled the field. Pursue them anon."],
+    stop:["Exit, pursued by fatigue.","Good night, good night. Thou shalt return upon the morrow.","All the gym's a stage, and thou hast taken thy bow.","Rest, brave soul. The tale is not yet ended."],
+    millionaire:["Behold! A crown of a million coins upon thy noble brow!","Now is the winter of our discontent made glorious summer by this workout!","The play is done, the hero wins, and the audience weeps with joy!"]},
+  {who:"The Pirate",langs:["en-IE","en-GB","en-AU"],rate:.95,pitch:.6,
+    green:["Arr! That step be plundered good and proper!","Shiver me timbers, ye be strong as an anchor chain!","Hoist the sails, matey, we be climbin' to treasure!","Ye did that like a true buccaneer. The parrot approves."],
+    orange:["Ye left a few reps in Davy Jones' locker. No matter, sail on!","Half the booty is still booty, savvy?","A little leak in the hull, but the ship still floats!"],
+    stop:["Drop anchor, matey. We sail again at dawn.","Even pirates take shore leave. Rest them bones.","The treasure will wait. It be buried, after all."],
+    millionaire:["TREASURE! A million doubloons for the bravest pirate on the seas!","X marks the spot and ye found it! Arr!","Break out the grog! Er, the water! We be rich!"]},
+  {who:"The Sports Announcer",langs:["en-AU","en-GB","en-US"],rate:1.25,pitch:1.2,
+    green:["AND SHE DOES IT! THE CROWD GOES ABSOLUTELY WILD!","Folks, forty years in this booth and I have never seen form like that!","WHAT A PLAY! Somebody check the replay, that was textbook!","She's on fire, Jim! She is ON FIRE!","That's going straight into the highlight reel, ladies and gentlemen!"],
+    orange:["Not her cleanest performance, Jim, but she stays in the game!","A few dropped reps there, but the momentum is still with her!","She's laboring a bit, but you cannot count her out!","That'll cost her style points, but the judges keep her on the board!"],
+    stop:["And she's heading to the bench. Smart coaching decision.","That's the end of the round, folks. What a fighter.","She's calling a timeout, and honestly, Jim, I respect it.","Not the finish we hoped for, but she'll be back. Tomorrow, actually."],
+    millionaire:["UNBELIEVABLE! SHE'S DONE IT! A MILLION DOLLARS! I'M OUT OF MY SEAT!","HISTORY HAS BEEN MADE, FOLKS! THE PERFECT ROUTINE!","Jim, I'm getting emotional up here. What a champion."]},
+  {who:"The Zen Monk",langs:["en-IN","en-GB"],rate:.7,pitch:.5,
+    green:["The step is complete. So is the moment. Breathe.","Like water, you flowed through it.","A leaf falls. A rep is done. All is as it should be.","You did not fight the exercise. You became it."],
+    orange:["The incomplete circle is still a circle.","Some reps were not meant to be. Release them.","The river does not count its stones. Neither should you.","Effort without perfection is still the path."],
+    stop:["Stopping is also a practice.","The mountain will still be there tomorrow. So will you.","Rest is not the opposite of progress. It is part of it.","Sit. Breathe. Drink tea."],
+    millionaire:["You have reached the top of the ladder. Notice that you are still you. A very strong you.","The million is an illusion. The strength is real.","Enlightenment achieved. Also, possibly, abs."]}
+];
+let lastVoice=null;
+function pickVoice(cat){ const v=pick(VOICES,lastVoice); lastVoice=v; return {who:v.who,langs:v.langs,rate:v.rate,pitch:v.pitch,line:pick(v[cat],lastQuip)}; }
+function pick(arr, last){ let q; do { q = arr[Math.floor(Math.random()*arr.length)]; } while (arr.length>1 && q===last); return q; }
+
+/* ---------- prize ladder ---------- */
+const BASE=[100,200,300,500,1000,2000,4000,8000,16000,32000,64000,125000,250000,500000,1000000];
+function ladder(n){
+  if(n<=0) return [];
+  if(n<=BASE.length) return BASE.slice(BASE.length-n);
+  const out=[]; for(let i=0;i<n;i++){ const v=Math.round(100*Math.pow(10000,i/(n-1))); out.push(i===n-1?1000000:v); } return out;
+}
+const money=v=>"$"+v.toLocaleString("en-US");
+
+/* ---------- storage: claude db when available, device storage otherwise ---------- */
+const LS="routine-millionaire-v1";
+let docs={}; let col=null;
+function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS)||"{}"); }catch(e){ return {}; } }
+function lsSave(){ try{ localStorage.setItem(LS, JSON.stringify(docs)); }catch(e){} }
+async function put(doc){ docs[doc.id]=doc; lsSave(); if(col){ try{ await col.doc(doc.id).set(doc); }catch(e){ setSync("Saved on this device (cloud save failed)"); } } }
+async function del(id){ delete docs[id]; lsSave(); if(col){ try{ await col.doc(id).delete(); }catch(e){} } }
+function setSync(t){ document.getElementById("sync").textContent=t; }
+const routines=()=>Object.values(docs).filter(d=>d.kind==="routine").sort((a,b)=>(a.created||0)-(b.created||0));
+const sessions=()=>Object.values(docs).filter(d=>d.kind==="session").sort((a,b)=>(b.ts||0)-(a.ts||0));
+const uid=p=>p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+function ensureExample(){
+  if(routines().length) return;
+  const id="r_example";
+  docs[id]={id,kind:"routine",example:true,name:"Example: Morning Strength",created:Date.now(),steps:[
+    {id:"s1",name:"Marching in place",purpose:"Warm up the legs and wake up the heart",times:1,reps:"2 min"},
+    {id:"s2",name:"Wall push-ups",purpose:"Chest and arms without wrist strain",times:2,reps:"10"},
+    {id:"s3",name:"Chair squats",purpose:"Leg strength for stairs and gardening",times:3,reps:"12"},
+    {id:"s4",name:"Glute bridges",purpose:"Protect the lower back",times:2,reps:"15"},
+    {id:"s5",name:"Plank",purpose:"Core stability",times:2,reps:"20 sec"}
+  ]};
+  lsSave();
+}
+
+/* ---------- state + render ---------- */
+let screen="home", editing=null, confirmDel=false, play=null, lastQuip="";
+const view=document.getElementById("view");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function go(s){ screen=s; document.getElementById("tab-home").setAttribute("aria-current", s!=="history"); document.getElementById("tab-hist").setAttribute("aria-current", s==="history"); render(); window.scrollTo(0,0); }
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(play && !play.ended){ play=null; } editing=null; go(b.dataset.go); });
+
+function render(){
+  if(screen==="home") return renderHome();
+  if(screen==="edit") return renderEdit();
+  if(screen==="play") return renderPlay();
+  if(screen==="history") return renderHistory();
+}
+
+function renderHome(){
+  const rs=routines();
+  view.innerHTML=`<div class="routines">
+    <div class="spread"><span class="label">Your routines</span><button class="btn gold small" id="new">+ New routine</button></div>
+    ${rs.length? rs.map(r=>`<article class="card routine">
+      <div><h3>${esc(r.name)}${r.example?'<span class="tag">Example</span>':""}</h3>
+      <div class="meta">${r.steps.length} step${r.steps.length===1?"":"s"} · top prize ${money(1000000)} on “${esc(r.steps[r.steps.length-1]?.name||"")}”</div></div>
+      <div class="row"><button class="btn gold" data-play="${r.id}" ${r.steps.length?"":"disabled"}>Play</button><button class="btn" data-edit="${r.id}">Edit</button></div>
+    </article>`).join("") : `<div class="card empty"><h3>No routines yet</h3><p class="muted">Tap New routine to add your first one.</p></div>`}
+  </div>`;
+  view.querySelector("#new").onclick=()=>{ editing={id:uid("r"),kind:"routine",name:"",created:Date.now(),steps:[blankStep()],isNew:true}; confirmDel=false; go("edit"); };
+  view.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{ editing=JSON.parse(JSON.stringify(docs[b.dataset.edit])); confirmDel=false; go("edit"); });
+  view.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>startPlay(b.dataset.play));
+}
+
+const blankStep=()=>({id:uid("s"),name:"",purpose:"",times:1,reps:""});
+
+function renderEdit(){
+  const r=editing, n=r.steps.length, lad=ladder(n);
+  view.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:16px">
+    <div class="spread"><h2 style="font-family:var(--display);font-size:1.25rem">${r.isNew?"New routine":"Edit routine"}</h2><button class="btn ghost small" id="cancel">Cancel</button></div>
+    <div class="field"><label class="label" for="rname">Routine name</label><input id="rname" value="${esc(r.name)}" placeholder="e.g. Tuesday gym"></div>
+    ${r.steps.map((s,i)=>`<div class="step-edit ${i===n-1?"final":""}">
+      <div class="spread"><span class="label">${i===n-1?"Millionaire step · "+money(1000000):"Step "+(i+1)+" · "+money(lad[i])}</span>
+        <div class="row" style="gap:6px"><button class="iconbtn" data-up="${i}" aria-label="Move up" ${i===0?"disabled":""}>↑</button><button class="iconbtn" data-down="${i}" aria-label="Move down" ${i===n-1?"disabled":""}>↓</button><button class="iconbtn" data-rm="${i}" aria-label="Remove step" ${n===1?"disabled":""}>×</button></div></div>
+      <div class="field"><label class="label" for="sn-${s.id}">Step name</label><input id="sn-${s.id}" data-f="name" data-i="${i}" value="${esc(s.name)}" placeholder="e.g. Goblet squats"></div>
+      <div class="field"><label class="label" for="sp-${s.id}">Purpose</label><textarea id="sp-${s.id}" data-f="purpose" data-i="${i}" placeholder="Why you do it">${esc(s.purpose)}</textarea></div>
+      <div class="grid2">
+        <div class="field"><label class="label" for="st-${s.id}">Number of times</label><input id="st-${s.id}" data-f="times" data-i="${i}" type="number" min="1" inputmode="numeric" value="${esc(s.times)}"></div>
+        <div class="field"><label class="label" for="sr-${s.id}">Reps</label><input id="sr-${s.id}" data-f="reps" data-i="${i}" value="${esc(s.reps)}" placeholder="12 or 30 sec"></div>
+      </div></div>`).join("")}
+    <button class="btn" id="addstep">+ Add step</button>
+    <p class="muted" style="margin:0;font-size:.88rem">The last step is always the millionaire step. Reorder with the arrows.</p>
+    <div class="row"><button class="btn gold" id="save">Save routine</button>${r.isNew?"":`<button class="btn danger" id="delr">Delete</button>`}</div>
+    ${confirmDel?`<div class="confirm"><p style="margin:0 0 10px">Delete “${esc(r.name||"this routine")}”? Your history stays.</p><div class="row"><button class="btn danger small" id="delyes">Yes, delete</button><button class="btn small" id="delno">Keep it</button></div></div>`:""}
+    <p id="err" class="muted" style="margin:0;color:#ffb3b5" hidden></p>
+  </div>`;
+  const sync=()=>{ r.name=view.querySelector("#rname").value; view.querySelectorAll("[data-f]").forEach(el=>{ const s=r.steps[+el.dataset.i]; s[el.dataset.f]= el.dataset.f==="times" ? Math.max(1,parseInt(el.value)||1) : el.value; }); };
+  view.querySelector("#cancel").onclick=()=>{ editing=null; go("home"); };
+  view.querySelector("#addstep").onclick=()=>{ sync(); r.steps.push(blankStep()); render(); view.querySelector(`#sn-${r.steps[r.steps.length-1].id}`).focus(); };
+  view.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{ sync(); const i=+b.dataset.up; [r.steps[i-1],r.steps[i]]=[r.steps[i],r.steps[i-1]]; render(); });
+  view.querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>{ sync(); const i=+b.dataset.down; [r.steps[i+1],r.steps[i]]=[r.steps[i],r.steps[i+1]]; render(); });
+  view.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ sync(); r.steps.splice(+b.dataset.rm,1); render(); });
+  view.querySelector("#save").onclick=async()=>{ sync(); const err=view.querySelector("#err");
+    if(!r.name.trim()){ err.textContent="Give the routine a name first."; err.hidden=false; return; }
+    if(r.steps.some(s=>!s.name.trim())){ err.textContent="Every step needs a name."; err.hidden=false; return; }
+    const d={...r}; delete d.isNew; delete d.example; d.updated=Date.now(); await put(d); editing=null; go("home"); };
+  const dr=view.querySelector("#delr"); if(dr) dr.onclick=()=>{ sync(); confirmDel=true; render(); };
+  const dy=view.querySelector("#delyes"); if(dy) dy.onclick=async()=>{ await del(r.id); editing=null; go("home"); };
+  const dn=view.querySelector("#delno"); if(dn) dn.onclick=()=>{ confirmDel=false; render(); };
+}
+
+function startPlay(id){ const r=docs[id]; play={r, lad:ladder(r.steps.length), i:0, results:[], phase:"ask", quip:"", ended:false}; go("play"); }
+
+function ladderHTML(){
+  const {r,lad,i,results}=play;
+  return `<div class="ladder" aria-label="Prize ladder">${r.steps.map((s,k)=>{
+    let cls = k===r.steps.length-1?"final ":"";
+    if(results[k]) cls+="done-"+results[k][0]; else if(k===i && play.phase==="ask") cls+="now";
+    return `<div class="rung ${cls}"><span class="n">${k+1}</span><span class="nm">${esc(s.name)}</span><span class="amt">${money(lad[k])}</span></div>`;
+  }).join("")}</div>`;
+}
+function banked(){ let v=0; play.results.forEach((x,k)=>{ if(x!=="red") v=play.lad[k]; }); return v; }
+
+function renderPlay(){
+  const {r,lad,i}=play, s=r.steps[i], last=i===r.steps.length-1;
+  let main;
+  if(play.phase==="ask"){
+    main=`<section class="question">
+      <div class="forprize">${last?"For ONE MILLION":"For "+money(lad[i])}</div>
+      <h3>${esc(s.name)}</h3>
+      ${s.purpose?`<p class="purpose">${esc(s.purpose)}</p>`:""}
+      <div class="dose"><span>${esc(s.times)} ${+s.times===1?"time":"times"}</span>${s.reps?`<span>${esc(s.reps)} reps</span>`:""}</div>
+    </section>
+    <div class="answers">
+      <button class="answer g" data-a="green"><span class="key">A</span><span>Did it<small>All the reps, every time</small></span></button>
+      <button class="answer o" data-a="orange"><span class="key">B</span><span>Did it, not all reps<small>Still counts, still climbing</small></span></button>
+      <button class="answer r" data-a="red"><span class="key">C</span><span>Stopped here<small>Walk away with what you have banked</small></span></button>
+    </div>`;
+  } else if(play.phase==="next"){
+    main=`<section class="question reveal"><div class="forprize">${play.results[i]==="orange"?"Partly done":"Correct"} · ${money(lad[i])} banked</div>
+      ${surpriseHTML()}${quipHTML()}<button class="btn gold" id="next">Next: ${money(lad[i+1])}${i+1===r.steps.length-1?" · the millionaire step":""}</button></section>`;
+  } else if(play.phase==="millionaire"){
+    main=`<section class="question reveal"><div class="label">You did the whole routine</div><div class="bigmoney">$1,000,000</div>
+      ${surpriseHTML()}${quipHTML()}<div class="row" style="justify-content:center"><button class="btn gold" id="done">Back to routines</button><button class="btn" id="seehist">See history</button></div></section>`;
+  } else {
+    const b=banked();
+    main=`<section class="question reveal"><div class="label">You stopped at step ${i+1}</div><div class="stopmoney">${b?"You leave with "+money(b):"No winnings this time"}</div>
+      ${surpriseHTML()}${quipHTML()}<div class="row" style="justify-content:center"><button class="btn gold" id="done">Back to routines</button><button class="btn" id="seehist">See history</button></div></section>`;
+  }
+  view.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px">
+    <div class="stage-head"><span class="label">Step ${i+1} of ${r.steps.length}</span><h2>${esc(r.name)}</h2></div>
+    ${main}
+    ${ladderHTML()}
+    ${play.ended?"":`<button class="btn ghost small" id="leave" style="align-self:center">Leave without saving</button>`}
+  </div>`;
+  view.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>answer(b.dataset.a));
+  const nx=view.querySelector("#next"); if(nx) nx.onclick=()=>{ play.i++; play.phase="ask"; render(); window.scrollTo(0,0); };
+  const dn=view.querySelector("#done"); if(dn) dn.onclick=()=>{ play=null; go("home"); };
+  const sh=view.querySelector("#seehist"); if(sh) sh.onclick=()=>{ play=null; go("history"); };
+  const lv=view.querySelector("#leave"); if(lv) lv.onclick=()=>{ play=null; go("home"); };
+}
+
+async function answer(a){
+  const p=play, last=p.i===p.r.steps.length-1;
+  p.results[p.i]=a;
+  const cat = a==="red" ? "stop" : last ? "millionaire" : a;
+  const vq = pickVoice(cat); p.quip=lastQuip=vq.line; p.voice=vq;
+  const roll=Math.random();
+  if(a==="red"){ p.phase="stopped"; p.pic=Math.random()<.5?pickPic("sleepy"):null; if(roll<.35) play_sfx("red"); else if(roll<.65) say(vq); }
+  else if(last){ p.phase="millionaire"; p.pic=Math.random()<.75?pickPic("rich"):null; millionaireSound(); confetti(); if(roll<.5) setTimeout(()=>say(vq),3200); }
+  else { p.phase="next"; p.pic=Math.random()<.5?pickPic(a==="green"?"happy":"wobbly"):null; if(roll<.35) play_sfx(a); else if(roll<.6) say(vq); }
+  if(a==="red"||last) p.ended=true;
+  render(); window.scrollTo(0,0);
+  if(a==="red") await finish(false); else if(last) await finish(true);
+}
+
+async function finish(mil){
+  const p=play; p.ended=true;
+  const now=new Date(), date=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const steps=p.r.steps.map((s,k)=>({name:s.name,times:s.times,reps:s.reps,status:p.results[k]||"not reached"}));
+  const c=k=>p.results.filter(x=>x===k).length;
+  await put({id:uid("x"),kind:"session",date,ts:now.getTime(),routineId:p.r.id,routine:p.r.name,steps,green:c("green"),orange:c("orange"),red:c("red"),millionaire:mil,prize:mil?1000000:banked()});
+}
+
+function renderHistory(){
+  const ss=sessions(), total=ss.length, mils=ss.filter(s=>s.millionaire).length;
+  const greens=ss.reduce((a,s)=>a+s.green,0);
+  view.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px">
+    <div class="stats"><div class="card stat"><b>${total}</b><span>Sessions</span></div><div class="card stat"><b>${mils}</b><span>Millionaires</span></div><div class="card stat"><b>${greens}</b><span>Green steps</span></div></div>
+    ${total?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Routine</th><th>Steps</th><th class="num">G</th><th class="num">O</th><th class="num">R</th><th>Millionaire</th></tr></thead><tbody>
+      ${ss.map(s=>`<tr><td style="white-space:nowrap">${esc(s.date)}</td><td>${esc(s.routine)}</td>
+        <td><div class="dots">${s.steps.map(st=>`<span class="dot ${st.status==="green"?"g":st.status==="orange"?"o":st.status==="red"?"r":"x"}" title="${esc(st.name)}: ${esc(st.status)}"></span>`).join("")}</div></td>
+        <td class="num">${s.green}</td><td class="num">${s.orange}</td><td class="num">${s.red}</td>
+        <td>${s.millionaire?'<span class="mil">Yes</span>':`<span class="muted">No · ${money(s.prize||0)}</span>`}</td></tr>`).join("")}
+    </tbody></table></div>`:`<div class="card empty"><h3>No sessions yet</h3><p class="muted">Play a routine and every step you finish shows up here, colored green, orange, or red.</p></div>`}
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <span class="label">Backup</span>
+      <p class="muted" style="margin:0;font-size:.9rem">Your routines and history live on this phone. Save a backup file now and then so nothing is lost if you change phones.</p>
+      <div class="row"><button class="btn small" id="backup">Save backup file</button><label class="btn small" for="restore" style="cursor:pointer">Restore from backup</label><input type="file" id="restore" accept=".json,application/json" hidden></div>
+      <p id="bmsg" class="muted" style="margin:0;font-size:.88rem" hidden></p>
+    </div>
+  </div>`;
+  const bm=view.querySelector("#bmsg");
+  view.querySelector("#backup").onclick=()=>{ try{ const blob=new Blob([JSON.stringify({app:"routine-millionaire",saved:new Date().toISOString(),docs},null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); const d=new Date(); a.download=`millionaire-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); bm.textContent="Backup saved to your Downloads."; bm.hidden=false; }catch(e){ bm.textContent="The backup could not be saved. Try again."; bm.hidden=false; } };
+  view.querySelector("#restore").onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const data=JSON.parse(rd.result); if(!data||!data.docs) throw 0; Object.assign(docs,data.docs); lsSave(); renderHistory(); const m=view.querySelector("#bmsg"); m.textContent="Backup restored."; m.hidden=false; }catch(err){ bm.textContent="That file is not a Routine Millionaire backup."; bm.hidden=false; } }; rd.readAsText(f); };
+}
+
+/* ---------- animated surprise pictures ---------- */
+const G="#f2c14e",GD="#b8892a",GR="#3fbf6e",OR="#f08a2c",RD="#e0464a",INK="#eef0ff",ST="#0b0f2a",SK="#c9cff0";
+const eye=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.2" fill="${ST}"/>`;
+const smile=(x,y,w=10)=>`<path d="M${x-w/2} ${y} q${w/2} ${w*.6} ${w} 0" stroke="${ST}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+const PICS={
+  happy:[
+    {cap:"The Pigeon of Approval",a:"a-bob",s:`<ellipse cx="58" cy="78" rx="34" ry="24" fill="#8f97b8"/><path d="M36 72 q-22 4 -26 22 q16 -4 30 -10z" fill="#6f7698"/><circle cx="80" cy="46" r="16" fill="#9aa2c4"/><path d="M68 56 q12 10 24 0 v8 q-12 8 -24 0z" fill="#5fae9a"/><circle cx="85" cy="42" r="4" fill="${OR}"/><circle cx="85" cy="42" r="1.8" fill="${ST}"/><path d="M95 45 l12 4 -12 3z" fill="${G}"/><path d="M50 100 v12 M66 100 v12" stroke="${OR}" stroke-width="3.5" stroke-linecap="round"/>`},
+    {cap:"Celebratory Espresso",a:"a-wiggle",s:`<path class="a-rise" d="M48 36 q-6 -8 0 -16 q6 -8 0 -16" stroke="${SK}" stroke-width="3" fill="none" stroke-linecap="round"/><path class="a-rise d2" d="M62 36 q-6 -8 0 -16 q6 -8 0 -16" stroke="${SK}" stroke-width="3" fill="none" stroke-linecap="round"/><path class="a-rise d3" d="M76 36 q-6 -8 0 -16 q6 -8 0 -16" stroke="${SK}" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="62" cy="104" rx="42" ry="8" fill="${SK}"/><path d="M34 46 h56 l-6 46 q-22 10 -44 0z" fill="${INK}"/><path d="M90 56 q16 0 14 14 q-2 12 -18 10" stroke="${INK}" stroke-width="6" fill="none"/>${eye(52,64)}${eye(72,64)}${smile(62,72,14)}`},
+    {cap:"Tomato Doing a Happy Dance",a:"a-bounce",s:`<circle cx="60" cy="68" r="38" fill="${RD}"/><path d="M60 32 l-14 -8 10 10 -16 2 18 4 -6 12 10 -10 10 10 -6 -12 18 -4 -16 -2 10 -10z" fill="${GR}"/><path d="M24 70 l-16 -16 M96 70 l16 -16" stroke="${RD}" stroke-width="6" stroke-linecap="round"/>${eye(48,62)}${eye(72,62)}${smile(60,74,18)}`},
+    {cap:"Sunflower Fan Club",a:"a-sway",s:`<path d="M60 115 v-50" stroke="${GR}" stroke-width="6"/><path d="M60 92 q-20 -2 -26 -16 q18 0 26 12" fill="${GR}"/>${Array.from({length:12},(_,k)=>`<ellipse cx="60" cy="22" rx="8" ry="16" fill="${G}" transform="rotate(${k*30} 60 46)"/>`).join("")}<circle cx="60" cy="46" r="16" fill="#6b4220"/>${eye(54,44)}${eye(66,44)}${smile(60,51,10)}`},
+    {cap:"Disco Ball of Glory",a:"a-spin",s:`<circle cx="60" cy="60" r="36" fill="#9aa2c4"/>${[-24,-12,0,12,24].map(y=>`<path d="M${60-Math.sqrt(1296-y*y)} ${60+y} H${60+Math.sqrt(1296-y*y)}" stroke="${ST}" stroke-width="1.4"/>`).join("")}${[-24,-12,0,12,24].map(x=>`<ellipse cx="60" cy="60" rx="${Math.abs(x)}" ry="36" stroke="${ST}" stroke-width="1.4" fill="none"/>`).join("")}<rect x="44" y="34" width="10" height="10" fill="${INK}"/><rect x="68" y="58" width="10" height="10" fill="${G}"/>`},
+    {cap:"Cactus in a Sweatband",a:"a-jump",s:`<rect x="46" y="28" width="28" height="80" rx="14" fill="${GR}"/><path d="M46 64 h-12 v-18" stroke="${GR}" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M74 72 h12 v-22" stroke="${GR}" stroke-width="12" stroke-linecap="round" fill="none"/><rect x="44" y="40" width="32" height="7" fill="${RD}"/>${eye(54,56)}${eye(66,56)}${smile(60,64,10)}<rect x="38" y="104" width="44" height="12" rx="3" fill="${OR}"/>`},
+    {cap:"Tiny Rocket Escaping Gravity",a:"a-launch",s:`<path d="M60 10 q20 20 20 56 h-40 q0 -36 20 -56z" fill="${INK}"/><circle cx="60" cy="42" r="9" fill="#5b8cff" stroke="${ST}" stroke-width="3"/><path d="M40 56 l-14 22 h14z M80 56 l14 22 h-14z" fill="${RD}"/><path d="M48 68 q12 40 12 44 q0 -4 12 -44z" fill="${OR}"/><path d="M54 68 q6 22 6 26 q0 -4 6 -26z" fill="${G}"/>`},
+    {cap:"Dumbbell Goes Round and Round",a:"a-spin",s:`<rect x="30" y="56" width="60" height="8" rx="4" fill="${SK}"/><rect x="16" y="38" width="16" height="44" rx="5" fill="${INK}"/><rect x="88" y="38" width="16" height="44" rx="5" fill="${INK}"/><rect x="8" y="46" width="10" height="28" rx="4" fill="#9aa2c4"/><rect x="102" y="46" width="10" height="28" rx="4" fill="#9aa2c4"/>`},
+    {cap:"A Bee Taking Notes",a:"a-bob",s:`<ellipse cx="44" cy="40" rx="16" ry="22" fill="${SK}" opacity=".8" transform="rotate(-25 44 40)"/><ellipse cx="74" cy="40" rx="16" ry="22" fill="${SK}" opacity=".8" transform="rotate(25 74 40)"/><ellipse cx="60" cy="72" rx="34" ry="26" fill="${G}"/><path d="M48 48 v48 M66 47 v50" stroke="${ST}" stroke-width="8"/>${eye(84,66)}${smile(86,76,8)}<path d="M26 72 l-12 0" stroke="${ST}" stroke-width="4" stroke-linecap="round"/>`}
+  ],
+  wobbly:[
+    {cap:"Jelly of Partial Credit",a:"a-wobble",s:`<ellipse cx="60" cy="108" rx="44" ry="8" fill="${SK}"/><path d="M24 104 q-2 -60 36 -64 q38 4 36 64z" fill="${OR}" opacity=".9"/><path d="M36 60 q8 -10 18 -12" stroke="${INK}" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/>${eye(50,76)}${eye(70,76)}<path d="M52 88 q8 -4 16 0" stroke="${ST}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`},
+    {cap:"Penguin Mostly Balanced",a:"a-wobble",s:`<ellipse cx="60" cy="68" rx="30" ry="42" fill="#2a2f55"/><ellipse cx="60" cy="76" rx="20" ry="32" fill="${INK}"/>${eye(52,44)}${eye(68,44)}<path d="M56 52 l4 6 4 -6z" fill="${OR}"/><path d="M48 110 h10 M62 110 h10" stroke="${OR}" stroke-width="5" stroke-linecap="round"/>`},
+    {cap:"Turtle, Getting There",a:"a-crawl",s:`<ellipse cx="58" cy="76" rx="36" ry="24" fill="${GR}"/><path d="M34 74 h48 M46 58 l-8 30 M70 58 l8 30" stroke="#25603d" stroke-width="3"/><circle cx="100" cy="72" r="12" fill="#8fd1a6"/>${eye(104,68)}${smile(104,76,7)}<rect x="30" y="94" width="10" height="12" rx="4" fill="#8fd1a6"/><rect x="74" y="94" width="10" height="12" rx="4" fill="#8fd1a6"/>`}
+  ],
+  sleepy:[
+    {cap:"The Snail Says Tomorrow",a:"a-crawl",s:`<path d="M14 100 h76 q10 0 10 -10 v-10" stroke="#9aa2c4" stroke-width="14" stroke-linecap="round" fill="none"/><circle cx="56" cy="68" r="30" fill="${OR}"/><path d="M56 68 m-18 0 a18 18 0 1 0 18 -18 a10 10 0 1 0 10 10" stroke="#6b4220" stroke-width="4" fill="none"/><path d="M98 80 l-4 -18 M106 80 l6 -16" stroke="#9aa2c4" stroke-width="3" stroke-linecap="round"/><circle cx="94" cy="62" r="3" fill="${ST}"/><circle cx="112" cy="64" r="3" fill="${ST}"/>`},
+    {cap:"Cat on a Very Important Nap",a:"a-snooze",s:`<ellipse cx="60" cy="88" rx="44" ry="22" fill="#9aa2c4"/><circle cx="30" cy="80" r="18" fill="#9aa2c4"/><path d="M16 68 l2 -16 10 10z M38 64 l8 -12 2 16z" fill="#9aa2c4"/><path d="M22 80 q4 3 8 0 M34 80 q4 3 8 0" stroke="${ST}" stroke-width="2.4" fill="none"/><path d="M104 90 q14 -2 10 -18" stroke="#9aa2c4" stroke-width="8" fill="none" stroke-linecap="round"/><text class="a-twinkle" x="58" y="44" font-family="Figtree, sans-serif" font-weight="700" font-size="18" fill="${INK}">z</text><text class="a-twinkle d2" x="72" y="28" font-family="Figtree, sans-serif" font-weight="700" font-size="24" fill="${INK}">Z</text>`},
+    {cap:"Ice Cream Taking a Break",a:"a-melt",s:`<path d="M42 66 l18 48 18 -48z" fill="${G}"/><path d="M46 70 l26 20 M74 70 l-24 24" stroke="${GD}" stroke-width="2"/><circle cx="60" cy="52" r="24" fill="#f6b8c9"/><path d="M38 60 q4 14 8 4 q4 12 8 2 q6 12 10 0 q4 10 8 0 q4 8 6 -4" fill="#f6b8c9"/>${eye(52,50)}${eye(68,50)}<path d="M54 60 q6 -3 12 0" stroke="${ST}" stroke-width="2.4" fill="none"/>`},
+    {cap:"Sloth Approves of Resting",a:"a-snooze",s:`<path d="M6 30 H114" stroke="#6b4220" stroke-width="8" stroke-linecap="round"/><path d="M36 32 v22 M84 32 v22" stroke="#a08060" stroke-width="10" stroke-linecap="round"/><ellipse cx="60" cy="72" rx="32" ry="26" fill="#a08060"/><ellipse cx="60" cy="70" rx="20" ry="15" fill="#e6d3b8"/><path d="M48 68 q4 3 8 0 M64 68 q4 3 8 0" stroke="${ST}" stroke-width="2.4" fill="none"/>${smile(60,76,8)}`}
+  ],
+  rich:[
+    {cap:"The Million Dollar Trophy",a:"a-bounce",s:`<path d="M34 18 h52 v20 q0 30 -26 34 q-26 -4 -26 -34z" fill="${G}"/><path d="M34 26 q-18 0 -16 14 q2 14 18 14 M86 26 q18 0 16 14 q-2 14 -18 14" stroke="${G}" stroke-width="6" fill="none"/><rect x="54" y="70" width="12" height="18" fill="${GD}"/><rect x="38" y="88" width="44" height="14" rx="3" fill="${GD}"/><path class="a-twinkle" d="M20 12 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="${INK}"/><path class="a-twinkle d2" d="M100 64 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="${INK}"/><text x="60" y="46" text-anchor="middle" font-family="Cinzel, serif" font-weight="800" font-size="16" fill="${ST}">$1M</text>`},
+    {cap:"Money Bag Doing a Jig",a:"a-wiggle",s:`<path d="M44 30 h32 l-6 12 q36 14 30 46 q-4 22 -40 22 q-36 0 -40 -22 q-6 -32 30 -46z" fill="${GR}"/><path d="M46 42 h28" stroke="#25603d" stroke-width="5"/><text x="60" y="88" text-anchor="middle" font-family="Cinzel, serif" font-weight="800" font-size="34" fill="${G}">$</text>`},
+    {cap:"Crown for the Champion",a:"a-bob",s:`<path d="M16 88 l8 -50 22 28 14 -38 14 38 22 -28 8 50z" fill="${G}"/><rect x="16" y="88" width="88" height="14" rx="3" fill="${GD}"/><circle cx="60" cy="72" r="7" fill="${RD}"/><circle cx="36" cy="78" r="5" fill="#5b8cff"/><circle cx="84" cy="78" r="5" fill="${GR}"/><path class="a-twinkle" d="M96 14 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="${INK}"/>`}
+  ]
+};
+function surpriseHTML(){ const p=play.pic; if(!p) return ""; return `<figure class="surprise" style="margin:0"><svg viewBox="0 0 120 120" role="img" aria-label="${esc(p.cap)}"><g class="${p.a}">${p.s}</g></svg><figcaption class="cap">${esc(p.cap)}</figcaption></figure>`; }
+function quipHTML(){ const w=play.voice; return `<p class="quip" style="margin:0">${esc(play.quip)}</p>`; }
+let phoneVoices=[];
+function loadVoices(){ try{ phoneVoices=window.speechSynthesis.getVoices()||[]; }catch(e){} }
+try{ if(window.speechSynthesis){ loadVoices(); window.speechSynthesis.onvoiceschanged=loadVoices; } }catch(e){}
+const norm=l=>String(l||"").replace("_","-").toLowerCase();
+function voiceFor(langs, who){
+  if(!phoneVoices.length) loadVoices();
+  const pickStable=list=>{ const local=list.filter(v=>v.localService); const pool=local.length?local:list; let h=0; for(const c of who) h=(h*31+c.charCodeAt(0))>>>0; return pool[h%pool.length]; };
+  for(const l of langs||[]){ const m=phoneVoices.filter(v=>norm(v.lang)===norm(l)); if(m.length) return pickStable(m); }
+  for(const l of langs||[]){ const m=phoneVoices.filter(v=>norm(v.lang).startsWith(norm(l).slice(0,2))); if(m.length) return pickStable(m); }
+  return null;
+}
+function say(vq){ if(!soundOn) return; try{ const s=window.speechSynthesis; if(!s) return; s.cancel(); const u=new SpeechSynthesisUtterance(vq.line); const v=voiceFor(vq.langs, vq.who); if(v){ u.voice=v; u.lang=v.lang; } else u.lang=(vq.langs&&vq.langs[0])||"en-US"; u.rate=vq.rate; u.pitch=vq.pitch; s.speak(u); }catch(e){} }
+let lastPic=null;
+function pickPic(set){ const arr=set==="rich"?[...PICS.rich,...PICS.rich,...PICS.happy]:PICS[set]; const p=pick(arr,lastPic); lastPic=p; return p; }
+
+/* ---------- silly sound library (plays after a tap, so browsers allow it) ---------- */
+let soundOn=true; try{ soundOn=localStorage.getItem(LS+"-sound")!=="off"; }catch(e){}
+let ac=null, master=null;
+function A(){ if(!ac){ ac=new (window.AudioContext||window.webkitAudioContext)(); master=ac.createGain(); master.gain.value=.9; const comp=ac.createDynamicsCompressor(); master.connect(comp).connect(ac.destination); } if(ac.state==="suspended") ac.resume(); return ac; }
+function v(type,f0,f1,t0,d,g=.15,o={}){ const c=A(), t=c.currentTime+t0, os=c.createOscillator(), gn=c.createGain(); os.type=type; os.frequency.setValueAtTime(f0,t); if(f1!==f0) os.frequency.exponentialRampToValueAtTime(f1,t+d);
+  gn.gain.setValueAtTime(.0001,t); gn.gain.exponentialRampToValueAtTime(g,t+.015); gn.gain.setValueAtTime(g,t+Math.max(.02,d*(o.hold||.3))); gn.gain.exponentialRampToValueAtTime(.0001,t+d);
+  if(o.vib){ const l=c.createOscillator(), lg=c.createGain(); l.frequency.value=o.vib[0]; lg.gain.value=o.vib[1]; l.connect(lg).connect(os.frequency); l.start(t); l.stop(t+d+.05); }
+  let n=os; if(o.f){ const f=c.createBiquadFilter(); f.type=o.f[0]; f.frequency.value=o.f[1]; f.Q.value=o.f[2]||1; n.connect(f); n=f; }
+  n.connect(gn).connect(master); os.start(t); os.stop(t+d+.05); }
+let nbuf=null;
+function noise(t0,d,g=.2,ft="bandpass",ff=1500,q=.8){ const c=A(); if(!nbuf){ nbuf=c.createBuffer(1,c.sampleRate*2,c.sampleRate); const ch=nbuf.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1; }
+  const s=c.createBufferSource(); s.buffer=nbuf; const f=c.createBiquadFilter(); f.type=ft; f.frequency.value=ff; f.Q.value=q; const gn=c.createGain(), t=c.currentTime+t0;
+  gn.gain.setValueAtTime(g,t); gn.gain.exponentialRampToValueAtTime(.0001,t+d); s.connect(f).connect(gn).connect(master); s.start(t,Math.random()); s.stop(t+d+.05); }
+const SFX={
+  boing:()=>v("sine",900,110,0,.6,.25,{vib:[18,60],hold:.05}),
+  slideUp:()=>v("sine",300,1400,0,.7,.18,{vib:[6,12],hold:.8}),
+  quack:()=>{ v("sawtooth",620,380,0,.16,.16,{f:["bandpass",1100,3]}); v("sawtooth",600,360,.22,.2,.16,{f:["bandpass",1100,3]}); },
+  ding:()=>{ noise(0,.04,.25,"highpass",4000); v("sine",1568,1568,0,1.1,.16,{hold:.02}); v("sine",2093,2093,.06,1.2,.12,{hold:.02}); },
+  xylophone:()=>[523,659,784,988,1175,1568].forEach((f,k)=>v("sine",f,f,k*.07,.35,.16,{hold:.02})),
+  laser:()=>{ v("square",1800,90,0,.35,.08); v("square",1800,90,.18,.35,.06); },
+  honk:()=>{ v("square",220,210,0,.22,.1,{f:["lowpass",900]}); v("square",233,222,0,.22,.08,{f:["lowpass",900]}); v("square",220,210,.3,.32,.1,{f:["lowpass",900]}); v("square",233,222,.3,.32,.08,{f:["lowpass",900]}); },
+  cuckoo:()=>{ v("sine",784,784,0,.25,.2); v("sine",622,622,.28,.4,.2); v("sine",784,784,.8,.25,.2); v("sine",622,622,1.08,.4,.2); },
+  kazoo:()=>[392,392,440,392,523,494].forEach((f,k)=>v("sawtooth",f,f,k*.16,k===5?.4:.15,.09,{f:["bandpass",1200,2],vib:[28,8],hold:.8})),
+  pop:()=>{ v("sine",400,1600,0,.08,.25,{hold:.1}); v("sine",600,2000,.15,.08,.2,{hold:.1}); v("sine",500,1800,.3,.08,.22,{hold:.1}); },
+  wobble:()=>v("triangle",420,380,0,1,.16,{vib:[7,90],hold:.8}),
+  sadTrombone:()=>[[392,.35],[370,.35],[349,.35],[330,1.1]].reduce((t,[f,d],k)=>{ v("sawtooth",f,k===3?f*.97:f,t,d,.1,{f:["lowpass",1100],vib:k===3?[6,10]:[0,0],hold:.85}); return t+d; },0),
+  slideDown:()=>v("sine",1300,200,0,.9,.18,{vib:[6,10],hold:.8}),
+  snore:()=>{ noise(0,.9,.18,"lowpass",420,4); v("sawtooth",80,70,0,.9,.06,{f:["lowpass",300]}); noise(1.1,.5,.1,"highpass",3000); },
+  drumroll:()=>{ for(let k=0;k<28;k++) noise(k*.045,.06,.05+k*.006,"bandpass",900,.6); noise(1.3,1.6,.3,"highpass",6000,.5); },
+  fanfare:()=>[[523,0,.16],[659,.16,.16],[784,.32,.16],[1047,.48,.5],[784,1.0,.16],[1047,1.16,1]].forEach(([f,t,d])=>{ v("sawtooth",f,f,t,d,.07,{f:["lowpass",2600],hold:.85}); v("square",f/2,f/2,t,d,.04,{f:["lowpass",1500],hold:.85}); }),
+  applause:()=>{ for(let k=0;k<90;k++) noise(Math.random()*2.6,.05,.08+Math.random()*.1,"bandpass",1400+Math.random()*1800,1.2); }
+};
+const SOUNDS={ green:["boing","slideUp","quack","ding","xylophone","laser","honk","cuckoo","kazoo","pop"], orange:["wobble","boing","honk","quack","slideUp"], red:["sadTrombone","slideDown","snore"] };
+let lastSnd="";
+function play_sfx(set){ if(!soundOn) return; try{ const name=pick(SOUNDS[set],lastSnd); lastSnd=name; SFX[name](); }catch(e){} }
+function millionaireSound(){ if(!soundOn) return; try{ SFX.drumroll(); setTimeout(()=>{ SFX.fanfare(); SFX.applause(); },1500); }catch(e){} }
+function setSoundBtn(){ const b=document.getElementById("soundbtn"); if(b){ b.setAttribute("aria-pressed",soundOn); b.textContent=soundOn?"Sound on":"Sound off"; } }
+document.getElementById("soundbtn").onclick=()=>{ soundOn=!soundOn; try{ localStorage.setItem(LS+"-sound",soundOn?"on":"off"); }catch(e){} setSoundBtn(); if(soundOn) SFX.ding(); };
+setSoundBtn();
+
+/* ---------- confetti ---------- */
+function confetti(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c=document.getElementById("confetti"), x=c.getContext("2d"); c.width=innerWidth; c.height=innerHeight;
+  const cols=["#f2c14e","#3fbf6e","#f08a2c","#eef0ff","#8fa0ff"];
+  const P=Array.from({length:160},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6,s:4+Math.random()*6,c:cols[Math.floor(Math.random()*cols.length)]}));
+  let t=0; (function f(){ x.clearRect(0,0,c.width,c.height); P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.r+=.1; x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); x.restore(); }); if(++t<260) requestAnimationFrame(f); else x.clearRect(0,0,c.width,c.height); })();
+}
+
+/* ---------- boot ---------- */
+docs=lsLoad(); ensureExample(); render();
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+</script>
+</body>
+</html>
